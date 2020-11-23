@@ -26,12 +26,12 @@ const (
 )
 
 var (
-	cursorMap    map[desktop.Cursor]*glfw.Cursor
+	cursorMap    map[desktop.StandardCursor]*glfw.Cursor
 	defaultTitle = "Fyne Application"
 )
 
 func initCursors() {
-	cursorMap = map[desktop.Cursor]*glfw.Cursor{
+	cursorMap = map[desktop.StandardCursor]*glfw.Cursor{
 		desktop.DefaultCursor:   glfw.CreateStandardCursor(glfw.ArrowCursor),
 		desktop.TextCursor:      glfw.CreateStandardCursor(glfw.IBeamCursor),
 		desktop.CrosshairCursor: glfw.CreateStandardCursor(glfw.CrosshairCursor),
@@ -559,11 +559,18 @@ func (w *window) findObjectAtPositionMatching(canvas *glCanvas, mouse fyne.Posit
 }
 
 func fyneToNativeCursor(cursor desktop.Cursor) *glfw.Cursor {
-	ret, ok := cursorMap[cursor]
-	if !ok {
+	switch v := cursor.CursorData().(type) {
+	case desktop.StandardCursor:
+		ret, ok := cursorMap[v]
+		if !ok {
+			return cursorMap[desktop.DefaultCursor]
+		}
+		return ret
+	case *glfw.Cursor:
+		return v
+	default:
 		return cursorMap[desktop.DefaultCursor]
 	}
-	return ret
 }
 
 func (w *window) mouseMoved(viewport *glfw.Window, xpos float64, ypos float64) {

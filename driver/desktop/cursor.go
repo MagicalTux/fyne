@@ -1,11 +1,19 @@
 package desktop
 
 // Cursor represents a standard fyne cursor
-type Cursor int
+type Cursor interface {
+	CursorData() interface{}
+}
+
+type StandardCursor int
+
+func (d StandardCursor) CursorData() interface{} {
+	return d
+}
 
 const (
 	// DefaultCursor is the default cursor typically an arrow
-	DefaultCursor Cursor = iota
+	DefaultCursor StandardCursor = iota
 	// TextCursor is the cursor often used to indicate text selection
 	TextCursor
 	// CrosshairCursor is the cursor often used to indicate bitmaps
