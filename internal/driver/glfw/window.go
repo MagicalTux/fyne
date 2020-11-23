@@ -52,8 +52,8 @@ type window struct {
 	decorate   bool
 	fixedSize  bool
 
-	cursor    *glfw.Cursor
-	stdCursor bool
+	cursor    desktop.Cursor
+	rawCursor *glfw.Cursor // rawCursor is only filled for custom cursors in order to be destroyed when becoming un-needed
 	canvas    *glCanvas
 	title     string
 	icon      fyne.Resource
@@ -579,13 +579,11 @@ func fyneToNativeCursor(cursor desktop.Cursor) (*glfw.Cursor, bool) {
 func (w *window) mouseMoved(viewport *glfw.Window, xpos float64, ypos float64) {
 	w.mousePos = fyne.NewPos(internal.UnscaleInt(w.canvas, int(xpos)), internal.UnscaleInt(w.canvas, int(ypos)))
 
-	cursor := cursorMap[desktop.DefaultCursor]
-	stdCursor := true
+	cursor := desktop.Cursor(desktop.DefaultCursor)
 
 	obj, pos, _ := w.findObjectAtPositionMatching(w.canvas, w.mousePos, func(object fyne.CanvasObject) bool {
 		if cursorable, ok := object.(desktop.Cursorable); ok {
-			fyneCursor := cursorable.Cursor()
-			cursor, stdCursor = fyneToNativeCursor(fyneCursor)
+			cursor = cursorable.Cursor()
 		}
 
 		_, hover := object.(desktop.Hoverable)
@@ -594,19 +592,25 @@ func (w *window) mouseMoved(viewport *glfw.Window, xpos float64, ypos float64) {
 
 	if w.cursor != cursor {
 		// cursor has changed, store new cursor and apply change via glfw
-		if !w.stdCursor {
-			if w.cursor != nil {
-				w.cursor.Destroy()
-			}
-		}
+		newCursor, isStdCursor := fyneToNativeCursor(cursor)
 		w.cursor = cursor
-		w.stdCursor = stdCursor
+		oldCursor := w.rawCursor
 
-		if cursor == nil {
+		if isStdCursor {
+			w.rawCursor = nil
+		} else {
+			w.rawCursor = newCursor
+		}
+
+		if newCursor == nil {
 			viewport.SetInputMode(glfw.CursorMode, glfw.CursorHidden)
 		} else {
 			viewport.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
-			viewport.SetCursor(cursor)
+			viewport.SetCursor(newCursor)
+		}
+		if oldCursor != nil {
+			// destroy old cursor now as to avoid viewport reverting to default cursor even for an instant
+			oldCursor.Destroy()
 		}
 	}
 	if obj != nil && !w.objIsDragged(obj) {
