@@ -1,14 +1,16 @@
 package desktop
 
+import "image"
+
 // Cursor represents a standard fyne cursor
 type Cursor interface {
-	CursorData() interface{}
+	Image() (image.Image, int, int)
 }
 
 type StandardCursor int
 
-func (d StandardCursor) CursorData() interface{} {
-	return d
+func (d StandardCursor) Image() (image.Image, int, int) {
+	return nil, 0, 0
 }
 
 const (

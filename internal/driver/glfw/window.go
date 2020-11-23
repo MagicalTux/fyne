@@ -52,11 +52,12 @@ type window struct {
 	decorate   bool
 	fixedSize  bool
 
-	cursor   *glfw.Cursor
-	canvas   *glCanvas
-	title    string
-	icon     fyne.Resource
-	mainmenu *fyne.MainMenu
+	cursor    *glfw.Cursor
+	stdCursor bool
+	canvas    *glCanvas
+	title     string
+	icon      fyne.Resource
+	mainmenu  *fyne.MainMenu
 
 	clipboard fyne.Clipboard
 
@@ -558,18 +559,20 @@ func (w *window) findObjectAtPositionMatching(canvas *glCanvas, mouse fyne.Posit
 	return driver.FindObjectAtPositionMatching(mouse, matches, canvas.Overlays().Top(), canvas.menu, canvas.Content())
 }
 
-func fyneToNativeCursor(cursor desktop.Cursor) *glfw.Cursor {
-	switch v := cursor.CursorData().(type) {
+func fyneToNativeCursor(cursor desktop.Cursor) (*glfw.Cursor, bool) {
+	switch v := cursor.(type) {
 	case desktop.StandardCursor:
 		ret, ok := cursorMap[v]
 		if !ok {
-			return cursorMap[desktop.DefaultCursor]
+			return cursorMap[desktop.DefaultCursor], true
 		}
-		return ret
-	case *glfw.Cursor:
-		return v
+		return ret, true
 	default:
-		return cursorMap[desktop.DefaultCursor]
+		img, x, y := cursor.Image()
+		if img == nil {
+			return nil, true
+		}
+		return glfw.CreateCursor(img, x, y), false
 	}
 }
 
@@ -577,10 +580,12 @@ func (w *window) mouseMoved(viewport *glfw.Window, xpos float64, ypos float64) {
 	w.mousePos = fyne.NewPos(internal.UnscaleInt(w.canvas, int(xpos)), internal.UnscaleInt(w.canvas, int(ypos)))
 
 	cursor := cursorMap[desktop.DefaultCursor]
+	stdCursor := true
+
 	obj, pos, _ := w.findObjectAtPositionMatching(w.canvas, w.mousePos, func(object fyne.CanvasObject) bool {
 		if cursorable, ok := object.(desktop.Cursorable); ok {
 			fyneCursor := cursorable.Cursor()
-			cursor = fyneToNativeCursor(fyneCursor)
+			cursor, stdCursor = fyneToNativeCursor(fyneCursor)
 		}
 
 		_, hover := object.(desktop.Hoverable)
@@ -589,7 +594,14 @@ func (w *window) mouseMoved(viewport *glfw.Window, xpos float64, ypos float64) {
 
 	if w.cursor != cursor {
 		// cursor has changed, store new cursor and apply change via glfw
+		if !w.stdCursor {
+			if w.cursor != nil {
+				w.cursor.Destroy()
+			}
+		}
 		w.cursor = cursor
+		w.stdCursor = stdCursor
+
 		if cursor == nil {
 			viewport.SetInputMode(glfw.CursorMode, glfw.CursorHidden)
 		} else {
