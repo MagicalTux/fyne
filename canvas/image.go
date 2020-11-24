@@ -33,8 +33,10 @@ const (
 	ImageScaleSmooth ImageScale = 0
 	// ImageScalePixels will scale the image using NearestNeighbor filter (or GL equivalent)
 	ImageScalePixels ImageScale = 1
-	// ImageScaleSkip will not scale the image
-	ImageScaleSkip ImageScale = 2
+	// ImageScaleQuick will leave scaling to OpenGL in Linear mode
+	ImageScaleQuick ImageScale = 2
+	// ImageScaleUgly will leave scaling to OpenGL in Nearest mode
+	ImageScaleUgly ImageScale = 3
 )
 
 // Declare conformity with CanvasObject interface

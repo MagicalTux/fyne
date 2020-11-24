@@ -78,7 +78,7 @@ func drawImage(c fyne.Canvas, img *canvas.Image, pos fyne.Position, base *image.
 		}
 	}
 
-	if img.ScaleMode == canvas.ImageScaleSkip {
+	if img.ScaleMode == canvas.ImageScaleQuick || img.ScaleMode == canvas.ImageScaleUgly {
 		// do not create new image
 		drawTex(scaledX, scaledY, width, height, base, origImg, clip)
 		return
