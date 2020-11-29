@@ -7,7 +7,7 @@ type MouseButton int
 
 const (
 	// LeftMouseButton is the most common mouse button - on some systems the only one
-	LeftMouseButton MouseButton = iota + 1
+	LeftMouseButton MouseButton = 1 << iota
 
 	// RightMouseButton is the secondary button on most mouse input devices.
 	RightMouseButton
