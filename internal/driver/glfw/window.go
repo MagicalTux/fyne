@@ -1009,11 +1009,8 @@ func keyToName(code glfw.Key, scancode int) fyne.KeyName {
 
 func (w *window) keyPressed(_ *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 	keyName := keyToName(key, scancode)
-	if keyName == "" {
-		return
-	}
 
-	keyEvent := &fyne.KeyEvent{Name: keyName}
+	keyEvent := &fyne.KeyEvent{Name: keyName, Sys: key}
 	keyDesktopModifier := desktopModifier(mods)
 	pendingMenuToggle := w.menuTogglePending
 	pendingMenuDeactivation := w.menuDeactivationPending

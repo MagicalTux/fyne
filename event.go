@@ -3,6 +3,7 @@ package fyne
 // KeyEvent describes a keyboard input event.
 type KeyEvent struct {
 	Name KeyName
+	Sys  interface{}
 }
 
 // PointEvent describes a pointer input event. The position is relative to the
